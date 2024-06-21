@@ -127,5 +127,16 @@ module.exports = (io) => {
     }
   });
 
+  // Ruta para obtener la lista de todos los usuarios
+  router.get('/drivers', async (req, res) => {
+    try {
+      const allUsers = await pool.query("SELECT id_usuario, nombre, tipo, foto, socket_id, navegacion, telefono, placa, movil FROM usuarios WHERE usuarios.tipo = $1", 'tipo2');
+      res.json(allUsers.rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Error al obtener la lista de usuarios.');
+    }
+  });
+
   return router;
 };
