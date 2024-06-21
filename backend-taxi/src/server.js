@@ -79,6 +79,9 @@ app.use('/api/geolocation', geolocationRoutes);
 app.use('/media/audios', express.static(path.join(__dirname, '..', 'public', 'media', 'audios')));
 
 // Middleware para servir archivos estáticos, incluyendo los archivos de audio
+app.use('/media/notifications', express.static(path.join(__dirname, '..', 'public', 'media', 'notifications')));
+
+// Middleware para servir archivos estáticos, incluyendo los archivos de audio
 app.use('/media/users', express.static(path.join(__dirname, '..', 'public', 'media', 'users')));
 
 app.get('/', (req, res) => {

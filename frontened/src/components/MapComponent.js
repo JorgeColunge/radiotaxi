@@ -17,12 +17,27 @@ const MapComponent = ({ id_usuario }) => {
   const [taxiLocation, setTaxiLocation] = useState({ lat: 0, lng: 0 });
   const [lastKnownLocation, setLastKnownLocation] = useState({ lat: 0, lng: 0 });
   const [currentTaxiLocation, setCurrentTaxiLocation] = useState({ lat: 0, lng: 0 });
+  const [audio] = useState(new Audio(`${process.env.REACT_APP_API_URL}/media/notifications/level-up-191997.mp3`));
+  const [successAudio] = useState(new Audio(`${process.env.REACT_APP_API_URL}/media/notifications/beep-6-96243.mp3`));
+  const [errorAudio] = useState(new Audio(`${process.env.REACT_APP_API_URL}/media/notifications/error-126627.mp3`));
 
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
     return `${hrs > 0 ? `${hrs}h ` : ''}${mins > 0 ? `${mins}m ` : ''}${secs}s`;
+  };
+
+  const playNotificationSound = () => {
+    audio.play().catch((error) => console.error('Error al reproducir el sonido:', error));
+  };
+
+  const playSuccessSound = () => {
+    successAudio.play().catch((error) => console.error('Error al reproducir el sonido de éxito:', error));
+  };
+
+  const playErrorSound = () => {
+    errorAudio.play().catch((error) => console.error('Error al reproducir el sonido de error:', error));
   };
 
   const fetchAcceptedRequests = async () => {
@@ -119,6 +134,7 @@ const MapComponent = ({ id_usuario }) => {
 
     const handleTaxiRequest = (request) => {
       console.log('Solicitud de taxi recibida:', request);
+      playNotificationSound();
       setPendingRequests((prevRequests) => [
         { ...request, timer: 10, tipo: 'taxi' },
         ...prevRequests
@@ -128,6 +144,7 @@ const MapComponent = ({ id_usuario }) => {
 
     const handleDeliveryRequest = (request) => {
       console.log('Solicitud de delivery recibida:', request);
+      playNotificationSound();
       setPendingRequests((prevRequests) => [
         { ...request, timer: 10, tipo: 'delivery' },
         ...prevRequests
@@ -137,6 +154,7 @@ const MapComponent = ({ id_usuario }) => {
 
     const handleReservationRequest = (request) => {
       console.log('Solicitud de reserva recibida:', request);
+      playNotificationSound();
       const [fecha, hora] = [request.fecha_reserva.split('T')[0], request.hora_reserva.split('-')[0]];
       const reservationDateTime = new Date(`${fecha}T${hora}`);
       const twoHoursBefore = new Date(reservationDateTime.getTime() - 2 * 60 * 60 * 1000);
@@ -153,13 +171,13 @@ const MapComponent = ({ id_usuario }) => {
     const handleRequestAccepted = (data) => {
       console.log("Solicitud aceptada:", data);
       setPendingRequests((prevRequests) =>
-        prevRequests.filter((request) => request.id_viaje !== data.id_viaje)
+        prevRequests.filter((request) => request.viajeId !== data.id_viaje)
       );
     };
 
     const handleAssigned = (data) => {
       console.log("Asignado al viaje:", data);
-      if (data.latitud && data.longitud && data.latitud_fin && data.longitud_fin) {
+      if (data.latitud && data.longitudes && data.latitud_fin && data.longitud_fin) {
         setAcceptedRequests((prevRequests) => [...prevRequests, data]);
         setShowNotification(false);
       } else {
@@ -208,6 +226,7 @@ const MapComponent = ({ id_usuario }) => {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/geolocation/accept-taxi-request`, acceptData);
       console.log('Respuesta de la aceptación del taxi:', response.data);
       setShowNotification(true);
+      playSuccessSound();
       setTimeout(() => {
         setShowNotification(false);
       }, 2000);
@@ -217,6 +236,7 @@ const MapComponent = ({ id_usuario }) => {
       if (error.response && error.response.status === 409) {
         console.error('El viaje ya ha sido asignado a otro taxista.');
         setShowAssignedNotification(true);
+        playErrorSound();
         setTimeout(() => {
           setShowAssignedNotification(false);
         }, 2000);
@@ -333,7 +353,7 @@ const MapComponent = ({ id_usuario }) => {
             <Card key={index} className="mb-3">
               <Card.Body>
                 <Card.Title>
-                  {request.tipo === 'taxi' ? <CarFront /> : request.tipo === 'delivery' ? <BoxSeam /> : <Calendar />}   {request.name}
+                  {request.tipo === 'taxi' ? <CarFront /> : request.tipo === 'delivery' ? <BoxSeam /> : <Calendar />}   {request.nombre}
                 </Card.Title>
                 <Card.Text>De: {request.address}</Card.Text>
                 <Card.Text>Hasta: {request.endAddress}{}</Card.Text>
@@ -378,12 +398,12 @@ const MapComponent = ({ id_usuario }) => {
         
       )}
       {showNotification && (
-        <div style={{ position: 'fixed', top: 0, width: '100%', backgroundColor: 'green', color: 'white', textAlign: 'center' }}>
+        <div style={{ position: 'fixed', top: 0, width: '100%', backgroundColor: 'green', color: 'white', textAlign: 'center', zIndex: 1050 }}>
           Has sido asignado al viaje
         </div>
       )}
       {showAssignedNotification && (
-        <div style={{ position: 'fixed', top: 0, width: '100%', backgroundColor: 'red', color: 'white', textAlign: 'center', zIndex: 1000 }}>
+        <div style={{ position: 'fixed', top: 0, width: '100%', backgroundColor: 'red', color: 'white', textAlign: 'center', zIndex: 1050 }}>
           El servicio ya fue asignado a otro taxi
         </div>
       )}
