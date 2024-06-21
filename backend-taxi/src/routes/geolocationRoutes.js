@@ -61,17 +61,46 @@ module.exports = (io) => {
   router.post('/panic2', (req, res) => geolocationController.panic2(req, res, io));
 
   // Ruta para manejar la subida de audios
-  router.post('/upload-audio', uploadAudio.single('audio'), (req, res) => {
+  router.post('/upload-audio', uploadAudio.single('audio'), async (req, res) => {
     try {
       const audioUrl = '/media/audios/' + req.file.filename;
+      const { filteredDrivers } = req.body;
+  
+      // Convertir filteredDrivers de JSON a array si es necesario
+      const selectedDrivers = JSON.parse(filteredDrivers || '[]');
+  
+      // Obtener los socket IDs de los conductores seleccionados
+      const result = await pool.query(
+        'SELECT socket_id FROM usuarios WHERE id_usuario = ANY($1)',
+        [selectedDrivers]
+      );
       
-      io.emit('new-audio', { audioUrl });
+      console.log("📌 RESULTADOS:", selectedDrivers);
+  
+      // Emitir el audio solo a los socket IDs de los conductores seleccionados
+      result.rows.forEach(row => {
+        io.to(row.socket_id).emit('new-audio', { audioUrl });
+      });
+  
       res.json({ audioUrl });
+  
+      // Eliminar el archivo después de 1 minuto (60,000 milisegundos)
+      setTimeout(() => {
+        const filePath = path.join(__dirname, '..', '..', 'public', audioUrl);
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error('Error deleting audio:', err);
+          } else {
+            console.log(`Audio file deleted: ${filePath}`);
+          }
+        });
+      }, 60000);
     } catch (error) {
       console.error('Error uploading audio:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+  
 
   // Ruta para manejar la subida de audios
   router.post('/upload-audio-tipo2', uploadAudio.single('audio'), (req, res) => {
@@ -80,6 +109,18 @@ module.exports = (io) => {
       
       io.emit('new-audio-tipo2', { audioUrl });
       res.json({ audioUrl });
+
+      // Eliminar el archivo después de 1 minuto (60,000 milisegundos)
+      setTimeout(() => {
+        const filePath = path.join(__dirname, '..', '..', 'public', audioUrl);
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error('Error deleting audio:', err);
+          } else {
+            console.log(`Audio file deleted: ${filePath}`);
+          }
+        });
+      }, 60000);
     } catch (error) {
       console.error('Error uploading audio:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -111,6 +152,18 @@ module.exports = (io) => {
       }
   
       res.json({ audioUrl });
+
+      // Eliminar el archivo después de 1 minuto (60,000 milisegundos)
+      setTimeout(() => {
+        const filePath = path.join(__dirname, '..', '..', 'public', audioUrl);
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error('Error deleting audio:', err);
+          } else {
+            console.log(`Audio file deleted: ${filePath}`);
+          }
+        });
+      }, 60000);
     } catch (error) {
       console.error('Error uploading audio:', error);
       res.status(500).json({ error: 'Internal server error' });
