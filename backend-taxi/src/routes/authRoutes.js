@@ -1,17 +1,28 @@
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+const sharp = require('sharp');
 const express = require('express');
 const authController = require('../controllers/authController');
 const { registerValidation, loginValidation } = require('../validations/userValidation');
-const multer = require('multer');
 const pool = require('../config/dbConfig');
 
 module.exports = (io) => {
   const router = express.Router();
 
-  // Configura Multer para guardar archivos en la carpeta 'uploads'
+  // Asegúrate de que la carpeta 'public/media/users' exista
+  const uploadDir = path.join(__dirname, '..', '..', 'public', 'media', 'users');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  // Configura Multer para guardar archivos en 'public/media/users'
+  const storage = multer.memoryStorage(); // Usar memoria en lugar de guardar directamente en disco
+
   const upload = multer({
-    dest: 'uploads/', // Asegúrate de que esta carpeta existe en tu servidor o cámbiala según tus necesidades
+    storage: storage,
     limits: {
-      fileSize: 1000000 // Limita el tamaño del archivo a 1MB
+      fileSize: 5000000 // Limita el tamaño del archivo a 5MB (ajusta según tus necesidades)
     },
     fileFilter: (req, file, cb) => {
       // Acepta solo archivos de imagen
@@ -22,9 +33,18 @@ module.exports = (io) => {
     }
   });
 
-  router.post('/register', upload.single('foto'), (req, res) => {
+  router.post('/register', upload.single('foto'), async (req, res) => {
     if (req.file) {
-      req.body.foto = req.file.path;
+      const compressedFileName = `foto-${Date.now()}-${Math.round(Math.random() * 1E9)}.jpg`;
+      const compressedFilePath = path.join(uploadDir, compressedFileName);
+
+      // Comprimir la imagen
+      await sharp(req.file.buffer)
+        .resize(800) // Cambia el tamaño a 800px de ancho (ajusta según tus necesidades)
+        .jpeg({ quality: 80 }) // Cambia la calidad de la imagen (ajusta según tus necesidades)
+        .toFile(compressedFilePath);
+
+      req.body.foto = path.join('media', 'users', compressedFileName).replace(/\\/g, '/');
     }
 
     const { error } = registerValidation(req.body);
@@ -47,7 +67,7 @@ module.exports = (io) => {
   router.get('/user/:id', async (req, res) => {
     const { id } = req.params;
     try {
-      const result = await pool.query('SELECT id_usuario, nombre, foto, socket_id, navegacion, telefono, placa FROM usuarios WHERE id_usuario = $1', [id]);
+      const result = await pool.query('SELECT id_usuario, nombre, foto, socket_id, navegacion, telefono, placa, movil FROM usuarios WHERE id_usuario = $1', [id]);
       if (result.rows.length > 0) {
         const user = result.rows[0];
         user.foto = user.foto ? `https://backend-ocba.onrender.com/${user.foto}` : null;
@@ -64,7 +84,7 @@ module.exports = (io) => {
   // Ruta para obtener la lista de todos los usuarios
   router.get('/users', async (req, res) => {
     try {
-      const allUsers = await pool.query('SELECT id_usuario, nombre, tipo, foto, socket_id, navegacion, telefono, placa FROM usuarios');
+      const allUsers = await pool.query('SELECT id_usuario, nombre, tipo, foto, socket_id, navegacion, telefono, placa, movil FROM usuarios');
       res.json(allUsers.rows);
     } catch (err) {
       console.error(err);
@@ -73,9 +93,18 @@ module.exports = (io) => {
   });
 
   // Ruta para editar un usuario
-  router.put('/user/:id', upload.single('foto'), (req, res) => {
+  router.put('/user/:id', upload.single('foto'), async (req, res) => {
     if (req.file) {
-      req.body.foto = req.file.path;
+      const compressedFileName = `foto-${Date.now()}-${Math.round(Math.random() * 1E9)}.jpg`;
+      const compressedFilePath = path.join(uploadDir, compressedFileName);
+
+      // Comprimir la imagen
+      await sharp(req.file.buffer)
+        .resize(800) // Cambia el tamaño a 800px de ancho (ajusta según tus necesidades)
+        .jpeg({ quality: 80 }) // Cambia la calidad de la imagen (ajusta según tus necesidades)
+        .toFile(compressedFilePath);
+
+      req.body.foto = path.join('media', 'users', compressedFileName).replace(/\\/g, '/');
     }
     authController.editUser(req, res, io); // Pass `io` to controller
   });

@@ -20,28 +20,45 @@ const io = socketIo(httpServer, {
 });
 
 io.on('connection', (socket) => {
+  console.log(`Nuevo cliente conectado: ${socket.id}`);
+  
+  socket.on('disconnect', () => {
+  console.log(`Cliente desconectado: ${socket.id}`);
+  });
+  });
+  
+  io.on('connection', (socket) => {
   console.log(`Usuario conectado: ${socket.id}`);
-
+  
   socket.on('registerUser', async (id_usuario) => {
-    try {
-      await pool.query('UPDATE usuarios SET socket_id = $1 WHERE id_usuario = $2', [socket.id, id_usuario]);
-      console.log(`Usuario ${id_usuario} registrado con socket ID ${socket.id}`);
-      io.emit('userUpdate');
-    } catch (err) {
-      console.error('Error al registrar socket ID:', err);
-    }
+  try {
+  await pool.query('UPDATE usuarios SET socket_id = $1 WHERE id_usuario = $2', [socket.id, id_usuario]);
+  console.log(`Usuario ${id_usuario} registrado con socket ID ${socket.id}`);
+  socket.join(id_usuario); // Unirse a una sala específica para el usuario
+  io.emit('userUpdate');
+  } catch (err) {
+  console.error('Error al registrar socket ID:', err);
+  }
   });
-
+  
   socket.on('disconnect', async () => {
-    try {
+  try {
+  const result = await pool.query('SELECT id_usuario FROM usuarios WHERE socket_id = $1', [socket.id]);
+  const id_usuario = result.rows[0]?.id_usuario;
+  
       await pool.query('UPDATE usuarios SET socket_id = NULL WHERE socket_id = $1', [socket.id]);
-      console.log(`Socket ID ${socket.id} ha sido removido`);
-      io.emit('userUpdate');
-    } catch (err) {
-      console.error('Error al remover socket ID:', err);
+    console.log(`Socket ID ${socket.id} ha sido removido`);
+  
+    if (id_usuario) {
+      socket.leave(id_usuario); // Salir de la sala específica del usuario
     }
+  
+    io.emit('userUpdate');
+  } catch (err) {
+    console.error('Error al remover socket ID:', err);
+  }
   });
-});
+  });
 
 app.use(express.json());
 app.use(cors());
@@ -58,12 +75,15 @@ const authRoutes = require('./routes/authRoutes')(io); // Pass `io` to `authRout
 app.use('/api/auth', authRoutes);
 app.use('/api/geolocation', geolocationRoutes);
 
+// Middleware para servir archivos estáticos, incluyendo los archivos de audio
+app.use('/media/audios', express.static(path.join(__dirname, '..', 'public', 'media', 'audios')));
+
+// Middleware para servir archivos estáticos, incluyendo los archivos de audio
+app.use('/media/users', express.static(path.join(__dirname, '..', 'public', 'media', 'users')));
+
 app.get('/', (req, res) => {
   res.send('¡Hola Mundo!');
 });
-
-// Middleware para servir archivos estáticos
-app.use(express.static(path.join(__dirname, 'build')));
 
 // Catch-all para enviar index.html para cualquier ruta que no coincida con las rutas API
 app.get('*', (req, res) => {
@@ -95,7 +115,7 @@ app.get('/logout', (req, res) => {
 });
 
 // Escucha en el puerto asignado por Render o en un puerto predeterminado para desarrollo local
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 10000;
 httpServer.listen(PORT, () => {
   console.log(`Servidor corriendo en este puerto ${PORT}`);
 });
