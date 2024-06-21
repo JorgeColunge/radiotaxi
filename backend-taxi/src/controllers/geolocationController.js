@@ -763,17 +763,16 @@ exports.panic2 = async (req, res, io) => {
   const { latitude, longitude } = req.body;
 
   try {
-    const allUsers = await pool.query('SELECT id_usuario, socket_id, latitud, longitud FROM usuarios WHERE tipo = $1', ['tipo2']);
-    console.log('Usuarios:', allUsers.rows);
+    const nearbyTaxis = await findNearbyTaxis(latitude, longitude, 1000); // Buscar taxistas en un rango de 1km
 
-    if (allUsers.rowCount === 0) {
-      return res.status(404).json({ message: 'No users found' });
+    if (nearbyTaxis.length === 0) {
+      return res.status(404).json({ message: 'No nearby users found' });
     }
 
     let nearestUser = null;
     let minDistance = Infinity;
 
-    allUsers.rows.forEach(user => {
+    nearbyTaxis.forEach(user => {
       const userCoords = { latitude: user.latitud, longitude: user.longitud };
       const distance = haversineDistance({ latitude, longitude }, userCoords);
       console.log(`Distancia a ${user.id_usuario}: ${distance} km`);
