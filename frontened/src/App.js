@@ -13,6 +13,7 @@ import HistoryTripsUser from './components/HistoryTripsUser';
 import HistoryAllTrips from './components/HistoryAllTrips';
 import socket from './Socket'; // Importa la instancia del socket
 import Layout from './components/Layout';
+import NewAudio from './components/NewAudio';
 
 function App() {
   useEffect(() => {
@@ -38,6 +39,7 @@ function App() {
 
   return (
     <Router>
+      <NewAudio />
       <Routes>
         <Route path="/" element={<RedirectAuth><Login /></RedirectAuth>} />
         <Route path="/register" element={<RedirectAuth><Register /></RedirectAuth>} />
