@@ -67,6 +67,18 @@ module.exports = (io) => {
       
       io.emit('new-audio', { audioUrl });
       res.json({ audioUrl });
+
+      // Eliminar el archivo después de 1 minuto (60,000 milisegundos)
+      setTimeout(() => {
+        const filePath = path.join(__dirname, '..', '..', 'public', audioUrl);
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error('Error deleting audio:', err);
+          } else {
+            console.log(`Audio file deleted: ${filePath}`);
+          }
+        });
+      }, 60000);
     } catch (error) {
       console.error('Error uploading audio:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -80,6 +92,18 @@ module.exports = (io) => {
       
       io.emit('new-audio-tipo2', { audioUrl });
       res.json({ audioUrl });
+
+      // Eliminar el archivo después de 1 minuto (60,000 milisegundos)
+      setTimeout(() => {
+        const filePath = path.join(__dirname, '..', '..', 'public', audioUrl);
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error('Error deleting audio:', err);
+          } else {
+            console.log(`Audio file deleted: ${filePath}`);
+          }
+        });
+      }, 60000);
     } catch (error) {
       console.error('Error uploading audio:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -111,6 +135,18 @@ module.exports = (io) => {
       }
   
       res.json({ audioUrl });
+
+      // Eliminar el archivo después de 1 minuto (60,000 milisegundos)
+      setTimeout(() => {
+        const filePath = path.join(__dirname, '..', '..', 'public', audioUrl);
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error('Error deleting audio:', err);
+          } else {
+            console.log(`Audio file deleted: ${filePath}`);
+          }
+        });
+      }, 60000);
     } catch (error) {
       console.error('Error uploading audio:', error);
       res.status(500).json({ error: 'Internal server error' });
