@@ -10,6 +10,7 @@ const HomePageContentTipo2 = () => {
   const [modalIsOpen, setModalIsOpen] = useState(!window.audioPlaybackAllowed);
   const id_usuario = localStorage.getItem('id_usuario');
 
+
   useEffect(() => {
     console.log('Socket conectado en HomePage:', socket.connected);
 

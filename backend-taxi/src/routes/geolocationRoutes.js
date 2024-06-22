@@ -75,8 +75,6 @@ module.exports = (io) => {
         [selectedDrivers]
       );
       
-      console.log("📌 RESULTADOS:", selectedDrivers);
-  
       // Emitir el audio solo a los socket IDs de los conductores seleccionados
       result.rows.forEach(row => {
         io.to(row.socket_id).emit('new-audio', { audioUrl });

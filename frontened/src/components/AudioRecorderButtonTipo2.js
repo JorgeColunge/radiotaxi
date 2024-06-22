@@ -7,6 +7,7 @@ const AudioRecorderButtonTipo2 = () => {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const recordingTimeoutRef = useRef(null); // Ref para el timeout
 
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -39,11 +40,21 @@ const AudioRecorderButtonTipo2 = () => {
 
     mediaRecorderRef.current.start();
     setIsRecording(true);
+
+    // Detener la grabación automáticamente después de 15 segundos
+    recordingTimeoutRef.current = setTimeout(() => {
+      stopRecording();
+    }, 15000);
   };
 
   const stopRecording = () => {
-    mediaRecorderRef.current.stop();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
     setIsRecording(false);
+    if (recordingTimeoutRef.current) {
+      clearTimeout(recordingTimeoutRef.current);
+    }
   };
 
   const handleButtonClick = () => {
