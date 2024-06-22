@@ -70,7 +70,7 @@ module.exports = (io) => {
       const result = await pool.query('SELECT id_usuario, nombre, foto, socket_id, navegacion, telefono, placa, movil FROM usuarios WHERE id_usuario = $1', [id]);
       if (result.rows.length > 0) {
         const user = result.rows[0];
-        user.foto = user.foto ? `https://backend-ocba.onrender.com/${user.foto}` : null;
+        user.foto = user.foto ? `${user.foto}` : null;
         res.json(user);
       } else {
         res.status(404).send('Usuario no encontrado');

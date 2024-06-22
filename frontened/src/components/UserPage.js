@@ -84,7 +84,7 @@ function UserPage() {
             <div style={{ maxWidth: '600px', margin: '20px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', backgroundColor: '#fff' }}>
                 <h1 style={{ textAlign: 'center', color: '#333' }}>Información de {user.nombre}</h1>
                 <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                    {user.foto && <img src={user.foto} alt="Foto del usuario" style={{ width: '150px', height: '150px', borderRadius: '75px', objectFit: 'cover', marginBottom: '20px' }} />}
+                    {user.foto && <img src={`${process.env.REACT_APP_API_URL}/${user.foto}`} alt="Foto del usuario" style={{ width: '150px', height: '150px', borderRadius: '75px', objectFit: 'cover', marginBottom: '20px' }} />}
                 </div>
                 <div style={{ margin: '20px 0', padding: '10px', borderBottom: '1px solid #eee' }}>
                     <strong>Nombre:</strong> {user.nombre}

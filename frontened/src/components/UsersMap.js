@@ -12,6 +12,11 @@ const UsersMap = () => {
     const mapRef = useRef();
     const mapInstance = useRef(null);
     const [runningAnimations, setRunningAnimations] = useState({}); // Para almacenar el estado de las animaciones
+    const [panicAudio] = useState(new Audio(`${process.env.REACT_APP_API_URL}/media/notifications/beep-warning-6387.mp3`));
+
+    const playPanicSound = () => {
+        panicAudio.play().catch((error) => console.error('Error al reproducir el sonido:', error));
+    };
 
     useEffect(() => {
         const initializeSocketListeners = () => {
@@ -34,6 +39,7 @@ const UsersMap = () => {
 
             socket.on('panic_event', ({ id_usuario }) => {
                 console.log('Panic event received for user:', id_usuario);
+                playPanicSound();
                 showPanicMarker(id_usuario);
             });
 
