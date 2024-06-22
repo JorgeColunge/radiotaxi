@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css'; // Importa Bootstrap CSS
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import Login from "./Login";
 import Register from "./Register";
 import HomePage from "./HomePage";
@@ -14,8 +14,11 @@ import HistoryAllTrips from './components/HistoryAllTrips';
 import socket from './Socket'; // Importa la instancia del socket
 import Layout from './components/Layout';
 import NewAudio from './components/NewAudio';
+import NewAudioWithAuth from './components/NewAudioWithAuth';
 
 function App() {
+  const tipo_usuario = localStorage.getItem('tipo_usuario');
+  
   useEffect(() => {
     socket.connect();
 
@@ -40,6 +43,7 @@ function App() {
   return (
     <Router>
       <NewAudio />
+      {tipo_usuario === 'tipo1' &&  <NewAudioWithAuth />}
       <Routes>
         <Route path="/" element={<RedirectAuth><Login /></RedirectAuth>} />
         <Route path="/register" element={<RedirectAuth><Register /></RedirectAuth>} />

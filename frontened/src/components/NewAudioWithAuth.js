@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 import socket from "../Socket";
 
-const NewAudio = () => {
-  const id_usuario = useRef(localStorage.getItem('id_usuario'));
+const NewAudioWithAuth = () => {
+  const id_usuarioRef = useRef(localStorage.getItem('id_usuario'));
 
   useEffect(() => {
     console.log('Socket conectado en HomePage:', socket.connected);
 
-    socket.emit('join', { id_usuario: id_usuario.current });
+    socket.emit('join', { id_usuario: id_usuarioRef.current });
 
     const handleNewAudio = ({ audioUrl }) => {
       const fullAudioUrl = `${process.env.REACT_APP_API_URL}${audioUrl}`;
@@ -18,16 +18,14 @@ const NewAudio = () => {
       }
     };
 
-    socket.on('new-audio', handleNewAudio);
-    socket.on('new-audio-single', handleNewAudio);
+    socket.on('new-audio-tipo2', handleNewAudio);
 
     return () => {
-      socket.off('new-audio', handleNewAudio);
-      socket.off('new-audio-single', handleNewAudio);
+      socket.off('new-audio-tipo2', handleNewAudio);
     };
   }, []); // Lista de dependencias vacía asegura que esto solo se ejecute una vez
 
   return null; // Este componente no renderiza nada en la UI
 };
 
-export default NewAudio;
+export default NewAudioWithAuth;
