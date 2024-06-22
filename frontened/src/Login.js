@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Preferences } from '@capacitor/preferences';
 import './login.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import socket from './Socket';
 
 const Login = () => {
   const [id_usuario, setIdUsuario] = useState("");
@@ -17,17 +16,17 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+  
     if (!id_usuario || !password) {
       setError("Por favor, complete todos los campos.");
       return;
     }
-
+  
     const payload = {
       id_usuario,
       password,
     };
-
+  
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, payload);
       setNombreUsuario(response.data.nombre);
@@ -35,11 +34,15 @@ const Login = () => {
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("id_usuario", id_usuario);
       localStorage.setItem("tipo_usuario", response.data.tipo);
-
+  
       // Guardar ID de usuario y token en Preferences de Capacitor
       await Preferences.set({ key: "id_usuario", value: id_usuario });
       await Preferences.set({ key: "token", value: response.data.token });
-
+  
+      // Conectar y registrar el socket
+      socket.connect();
+      socket.emit('registerUser', id_usuario);
+  
       // Redirección a la página principal después de un pequeño retraso
       setTimeout(() => {
         setShowModal(false);
@@ -50,6 +53,7 @@ const Login = () => {
       setError(errorMsg);
     }
   };
+  
 
   return (
     <div className="login-body">
